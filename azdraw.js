@@ -52,7 +52,6 @@ function selectable(selectable){
     }else{
         map.removeEventListener("click", eventHandler);
     }
-
 }
 
 //绘制区域
@@ -62,19 +61,22 @@ function onDrawPolygon(points) {
     map.addOverlay(polygon);
 }
 
+function deletePointMarker(polygonInfo){
+    var markers = polygonInfo['markers'];
+    for (var markindex in markers) {
+        if(markers.hasOwnProperty(markindex)){
+            map.removeOverlay(markers[markindex]);
+        }
+    }
+}
+
 //不显示所有marker
 function remove_point() {
     if(polygonCreated.length == 0){
         alert("没有区域,拒绝操作");
     }
     for (var index = 0; index < polygonCreated.length; index++) {
-        var polygonInfo = polygonCreated[index];
-        var markers = polygonInfo['markers'];
-        for (var markindex in markers) {
-            if(markers.hasOwnProperty(markindex)){
-                map.removeOverlay(markers[markindex]);
-            }
-        }
+        deletePointMarker(polygonCreated[index]);
     }
 }
 
@@ -105,7 +107,9 @@ function lastPolygonArea() {
         return;
     }
     paintRed(getNextIndex(false));
-    recoverLastPainted(polygonLast);
+    if(polygonSpot != polygonLast){
+        recoverLastPainted(polygonLast);
+    }
 }
 
 //下一个区域
@@ -114,7 +118,9 @@ function nextPolygonArea() {
         return;
     }
     paintRed(getNextIndex(true));
-    recoverLastPainted(polygonLast);
+    if(polygonSpot != polygonLast){
+        recoverLastPainted(polygonLast);
+    }
 }
 
 //退出浏览模式
@@ -131,6 +137,8 @@ function deletePoint() {
     }
 }
 
+
+
 //撤销上次绘制的图形
 function deleteLastArea(all) {
     if (polygonCreated.length == 0) {
@@ -138,29 +146,16 @@ function deleteLastArea(all) {
     }
     if (!all) {
         var polygonInfo = polygonCreated[polygonCreated.length - 1];
-        var polygon = polygonInfo['polygon'];
-        var markers = polygonInfo['markers'];
-        for (var markindex in markers) {
-            if(markers.hasOwnProperty(markindex)){
-                map.removeOverlay(markers[markindex]);
-            }
-        }
-        map.removeOverlay(polygon);
+        deletePointMarker(polygonInfo);
+        map.removeOverlay(polygonInfo['polygon']);
         polygonCreated.splice(-1, 1);
     } else {
         for (var index = 0; index < polygonCreated.length; index++) {
             polygonInfo = polygonCreated[index];
-            polygon = polygonInfo['polygon'];
-            markers = polygonInfo['markers'];
-            for (var markerindex in markers) {
-                if(markers.hasOwnProperty(markerindex)) {
-                    map.removeOverlay(markers[markerindex]);
-                }
-            }
-            map.removeOverlay(polygon);
+            deletePointMarker(polygonInfo);
+            map.removeOverlay(polygonInfo['polygon']);
         }
     }
-    polygonSpot--;
 }
 
 //描点绘制
@@ -205,7 +200,7 @@ function move_finished() {
 }
 
 function repaintColor(polygonIndex, color, opacity){
-    if (0 <= polygonLast && polygonIndex < polygonCreated.length) {
+    if (0 <= polygonIndex && polygonIndex < polygonCreated.length) {
         var polygonInfo = polygonCreated[polygonIndex];
         var polygon = polygonInfo['polygon'];
         map.removeOverlay(polygon);
