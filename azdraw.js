@@ -236,3 +236,7 @@ function drawingFinished(){
         isLight=true;
     }
 }
+
+function about(){
+    alert("地图编辑器，本编辑器使用了百度地图的API\n\nAuthor:https://github.com/slankka\n2016年12月29日 17:33:16");
+}

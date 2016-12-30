@@ -35,7 +35,7 @@
 </head>
 <body>
 <div id="allmap"></div>
-<div id="panel" style="width:100%;height:26px;background-color: rgba(22, 44, 37, 0.61);z-index: 9999; position: fixed ! important; right: 0px; bottom: 0px;">
+<div id="panel" style="width:70%;height:50px;background-color: rgba(22, 44, 37, 0.61);z-index: 9999; position: fixed ! important; margin-left: 368px; bottom: 0px;">
     <table width="100%" style="position: absolute;  right: 0px; top: 0px;">
         <tr>
             <td><a role="button" class="button" onclick="selectable(true);" >绘制开始</a></td>
@@ -45,12 +45,14 @@
             <td><a role="button" class="button" onclick="drawingFinished();" >已绘制区域</a></td>
             <td><a role="button" class="button" onclick="selectable(false);" >绘制结束</a></td>
             <td><a role="button" class="button" onclick="remove_point();" >不显示点</a></td>
+        </tr><tr>
             <td><a role="button" class="button" onclick="lastPolygonArea();" >上一个区域</a></td>
             <td><a role="button" class="button" onclick="nextPolygonArea();" >下一个区域</a></td>
             <td><a role="button" class="button" onclick="quitBrowse();" >退出浏览</a></td>
             <td><a role="button" class="button" onclick="moveble_point(true);" >编辑区域</a></td>
             <td><a role="button" class="button" onclick="moveble_point(false);" >区域不可编辑</a></td>
             <td><a role="button" class="button" onclick="move_finished();" >退出区域编辑</a></td>
+            <td><a role="button" class="button" onclick="about();" >关于</a></td>
         </tr>
     </table>
 </div>
