@@ -5,7 +5,7 @@
 // var map = new BMap.Map("allmap");
 // map.enableScrollWheelZoom();   //启用滚轮放大缩小，默认禁用
 // map.centerAndZoom("重庆", 12);
-
+//单击获取点击的经纬度
 var map = window.map;
 //当前点，当前标记点
 var drawingAreaPoints = [];
@@ -14,7 +14,8 @@ var polygonCreated = [];//数据结构，包含polygon和markers
 var polygonSpot = 0;
 var polygonLast = 0;
 
-//单击取点
+
+//添加点
 function addMarker(longitude, lattitude) {
     var point = new BMap.Point(longitude, lattitude);
     drawingAreaPoints.push(point);
@@ -22,11 +23,11 @@ function addMarker(longitude, lattitude) {
     pointMarkersCreated.push(marker);
     map.addOverlay(marker);
 }
-
 //事件处理器
 var eventHandler = function (e) {
     addMarker(e.point.lng, e.point.lat);
 };
+
 
 //检查在编辑模式
 function checkEditing() {
@@ -70,7 +71,9 @@ function remove_point() {
         var polygonInfo = polygonCreated[index];
         var markers = polygonInfo['markers'];
         for (var markindex in markers) {
-            map.removeOverlay(markers[markindex]);
+            if(markers.hasOwnProperty(markindex)){
+                map.removeOverlay(markers[markindex]);
+            }
         }
     }
 }
@@ -92,18 +95,16 @@ function recoverLastPainted(polygonIndex) {
     repaintColor(polygonIndex, "#fff", 0.65);
 }
 
+function paintRed(polygonIndex){
+    repaintColor(polygonIndex, "red", 0.3);
+}
+
 //上一个区域
 function lastPolygonArea() {
     if(polygonCreated.length == 0){
         return;
     }
-    var index = getNextIndex(false);
-    var polygonInfo = polygonCreated[index];
-    var polygon = polygonInfo['polygon'];
-    map.removeOverlay(polygon);
-    polygon.setFillColor("red");
-    polygon.setFillOpacity(0.3);
-    map.addOverlay(polygon);
+    paintRed(getNextIndex(false));
     recoverLastPainted(polygonLast);
 }
 
@@ -112,14 +113,7 @@ function nextPolygonArea() {
     if(polygonCreated.length == 0){
         return;
     }
-    var index = getNextIndex(true);
-    var polygonInfo = polygonCreated[index];
-    var markers = polygonInfo['markers'];
-    var polygon = polygonInfo['polygon'];
-    map.removeOverlay(polygon);
-    polygon.setFillColor("red");
-    polygon.setFillOpacity(0.3);
-    map.addOverlay(polygon);
+    paintRed(getNextIndex(true));
     recoverLastPainted(polygonLast);
 }
 
@@ -147,7 +141,9 @@ function deleteLastArea(all) {
         var polygon = polygonInfo['polygon'];
         var markers = polygonInfo['markers'];
         for (var markindex in markers) {
-            map.removeOverlay(markers[markindex]);
+            if(markers.hasOwnProperty(markindex)){
+                map.removeOverlay(markers[markindex]);
+            }
         }
         map.removeOverlay(polygon);
         polygonCreated.splice(-1, 1);
@@ -157,7 +153,9 @@ function deleteLastArea(all) {
             polygon = polygonInfo['polygon'];
             markers = polygonInfo['markers'];
             for (var markerindex in markers) {
-                map.removeOverlay(markers[markerindex]);
+                if(markers.hasOwnProperty(markerindex)) {
+                    map.removeOverlay(markers[markerindex]);
+                }
             }
             map.removeOverlay(polygon);
         }
@@ -228,7 +226,6 @@ function flashPolygonDark(){
         repaintColor(i, "#fff", 0.65);
     }
 }
-
 var isLight = false;
 function drawingFinished(){
     if(isLight){
