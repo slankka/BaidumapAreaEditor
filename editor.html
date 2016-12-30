@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>区域编辑器</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no"/>
+    <style type="text/css">
+        body, html {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            font-family: "Microsoft YaHei";
+        }
+        #allmap {
+            height: 100%;
+            width: 100%;
+        }
+        .button{
+            font-size: 10px;
+            padding: 2px 6px;
+            display: block;
+            color: #f5f8ff;
+            background-color: #93a935;
+            text-align:center;
+        }
+        a.button {
+            text-decoration:none;
+            cursor: pointer;
+        }
+    </style>
+    <script src="http://libs.baidu.com/jquery/1.9.0/jquery.js"></script>
+    <script type="text/javascript"
+            src="http://api.map.baidu.com/api?v=2.0&ak=YourAK"></script>
+</head>
+<body>
+<div id="allmap"></div>
+<div id="panel" style="width:100%;height:26px;background-color: rgba(22, 44, 37, 0.61);z-index: 9999; position: fixed ! important; right: 0px; bottom: 0px;">
+    <table width="100%" style="position: absolute;  right: 0px; top: 0px;">
+        <tr>
+            <td><a role="button" class="button" onclick="selectable(true);" >绘制开始</a></td>
+            <td><a role="button" class="button" onclick="draw();" >绘制区域</a></td>
+            <td><a role="button" class="button" onclick="deletePoint();" >撤销本次取点</a></td>
+            <td><a role="button" class="button" onclick="deleteLastArea(false);" >撤销上次区域</a></td>
+            <td><a role="button" class="button" onclick="drawingFinished();" >已绘制区域</a></td>
+            <td><a role="button" class="button" onclick="selectable(false);" >绘制结束</a></td>
+            <td><a role="button" class="button" onclick="remove_point();" >不显示点</a></td>
+            <td><a role="button" class="button" onclick="lastPolygonArea();" >上一个区域</a></td>
+            <td><a role="button" class="button" onclick="nextPolygonArea();" >下一个区域</a></td>
+            <td><a role="button" class="button" onclick="quitBrowse();" >退出浏览</a></td>
+            <td><a role="button" class="button" onclick="moveble_point(true);" >编辑区域</a></td>
+            <td><a role="button" class="button" onclick="moveble_point(false);" >区域不可编辑</a></td>
+            <td><a role="button" class="button" onclick="move_finished();" >退出区域编辑</a></td>
+        </tr>
+    </table>
+</div>
+<script type="text/javascript">
+     var map = new BMap.Map("allmap");
+     map.enableScrollWheelZoom();   //启用滚轮放大缩小，默认禁用
+     map.centerAndZoom("重庆", 12);
+</script>
+<script type="text/javascript" src="azdraw.js" ></script>
+
+</body>
+</html>
