@@ -1,12 +1,9 @@
 /**
  * Created on 2016/12/29.
  */
-    // 百度地图API功能
-// var map = new BMap.Map("allmap");
-// map.enableScrollWheelZoom();   //启用滚轮放大缩小，默认禁用
-// map.centerAndZoom("重庆", 12);
 //单击获取点击的经纬度
 var map = window.map;
+var loaded = window.loaded;
 //当前点，当前标记点
 var drawingAreaPoints = [];
 var pointMarkersCreated = [];
@@ -14,6 +11,40 @@ var polygonCreated = [];//数据结构，包含polygon和markers
 var polygonSpot = 0;
 var polygonLast = 0;
 
+//防止重复添加单击事件监听处理器，修复原始addEventListener的bug
+BMap.Map.prototype.on =
+    BMap.Map.prototype.addEventListener = function (type, handler, key) {
+        if (typeof handler != "function") {
+            return;
+        }
+        !handler.al && (handler.al = {});
+        !this.Hi && (this.Hi = {});
+
+        var e, t = this.Hi;
+        if (typeof key == "string" && key) {
+            /[^\w\-]/.test(key) && console.log("nonstandard key:" + key);
+            e = handler.Dx = key
+        }
+        type.indexOf("on") && (type = "on" + type);
+
+        // typeof t[type] != "object" && (t[type] = []);
+        typeof t[type] != "object" && (t[type] = {});
+        typeof handler.al[type] != "object" && (handler.al[type] = {});
+
+        // 避免函数重复注册
+        for (e in t[type]) {
+            if (t[type].hasOwnProperty(e) && t[type][e] === handler) return handler;
+        }
+        e = e || guid('$BAIDU$');
+        t[type][e] = handler;
+        handler.al[type].Dx = e;
+        key && typeof key == "string" && (t[type][key] = handler);
+
+        return handler;
+    };
+function guid(index){
+    return "TANGRAM__" + (window[index]._counter++).toString(36);
+}
 
 //添加点
 function addMarker(longitude, lattitude) {
@@ -24,10 +55,9 @@ function addMarker(longitude, lattitude) {
     map.addOverlay(marker);
 }
 //事件处理器
-var eventHandler = function (e) {
+function clickEventHandler(e) {
     addMarker(e.point.lng, e.point.lat);
-};
-
+}
 
 //检查在编辑模式
 function checkEditing() {
@@ -44,13 +74,17 @@ function checkEditing() {
 //开启绘制，退出绘制
 function selectable(selectable){
     if(selectable){
+        if(!loaded){
+            alert("地图还没加载");
+            return;
+        }
         if(checkEditing()){
             alert("还没编辑完成");
         }else{
-            map.addEventListener("click", eventHandler);
+            addClkEvent();
         }
     }else{
-        map.removeEventListener("click", eventHandler);
+        removeClkEvent();
     }
 }
 
@@ -125,6 +159,7 @@ function nextPolygonArea() {
 
 //退出浏览模式
 function quitBrowse() {
+    move_finished();
     recoverLastPainted(polygonSpot);
     polygonSpot = polygonCreated.length;
 }
@@ -136,8 +171,6 @@ function deletePoint() {
         map.removeOverlay(pointMarkersCreated[point_index]);
     }
 }
-
-
 
 //撤销上次绘制的图形
 function deleteLastArea(all) {
@@ -156,6 +189,7 @@ function deleteLastArea(all) {
             map.removeOverlay(polygonInfo['polygon']);
         }
     }
+    freshCount();
 }
 
 //描点绘制
@@ -165,6 +199,7 @@ function draw() {
         quitBrowse();
         drawingAreaPoints = [];
         pointMarkersCreated = [];
+        freshCount();
     } else {
         alert("本次描点少于三个");
     }
@@ -176,12 +211,12 @@ function moveble_point(enable) {
         var polygonInfo = polygonCreated[polygonSpot];
         var polygon = polygonInfo['polygon'];
         if (enable) {
-            map.removeEventListener("click", eventHandler);
+            removeClkEvent();
             polygon.enableEditing();
         } else {
             polygon.disableEditing();
             if(!checkEditing()){
-                map.addEventListener("click", eventHandler);
+                addClkEvent();
             }
         }
     } else {
@@ -189,16 +224,29 @@ function moveble_point(enable) {
     }
 }
 
+function addClkEvent(){
+    map.addEventListener("click", clickEventHandler);
+    //console.log("EventHandler:", clickEventHandler.al['onclick']);
+    //console.log("BaiduMap mapOnclickListener", map.Hi['onclick']);
+}
+
+function removeClkEvent(){
+    map.removeEventListener("click", clickEventHandler);
+    //console.log("EventHandler:", clickEventHandler.al['onclick']);
+    //console.log("BaiduMap mapOnclickListener", map.Hi['onclick']);
+}
+
 //退出编辑模式
 function move_finished() {
     for (var index = 0; index < polygonCreated.length; index++) {
-        polygonInfo = polygonCreated[index];
-        polygon = polygonInfo['polygon'];
+        var polygonInfo = polygonCreated[index];
+        var polygon = polygonInfo['polygon'];
         polygon.disableEditing();
     }
-    map.addEventListener("click", eventHandler);
+    addClkEvent();
 }
 
+//区域涂色
 function repaintColor(polygonIndex, color, opacity){
     if (0 <= polygonIndex && polygonIndex < polygonCreated.length) {
         var polygonInfo = polygonCreated[polygonIndex];
@@ -209,13 +257,13 @@ function repaintColor(polygonIndex, color, opacity){
         map.addOverlay(polygon);
     }
 }
-
+//亮起已绘制区域
 function flashPolygonLight(){
     for(var i=0; i< polygonCreated.length;i++){
         repaintColor(i, "yellow", 0.75);
     }
 }
-
+//恢复已经绘制的区域
 function flashPolygonDark(){
     for(var i=0; i< polygonCreated.length;i++){
         repaintColor(i, "#fff", 0.65);
@@ -230,6 +278,25 @@ function drawingFinished(){
         flashPolygonLight();
         isLight=true;
     }
+}
+
+//打印输出区域
+function printArea(){
+    for (var index = 0; index < polygonCreated.length; index++) {
+        var polygonInfo = polygonCreated[index];
+        var polygon = polygonInfo['polygon'];
+        var path = polygon.getPath();
+        console.log("=====AREA_BEGIN====");
+        for(var i=0;i< path.length;i++){
+            console.log(path[i].lng + "," + path[i].lat);
+        }
+        console.log("======AREA_END=====");
+    }
+}
+
+//计数器
+function freshCount(){
+    $("#currentNum").html(polygonCreated.length);
 }
 
 function about(){
