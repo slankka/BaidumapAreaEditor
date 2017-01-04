@@ -2,49 +2,15 @@
  * Created on 2016/12/29.
  */
 //单击获取点击的经纬度
-var map = window.map;
-var loaded = window.loaded;
 //当前点，当前标记点
 var drawingAreaPoints = [];
 var pointMarkersCreated = [];
 var polygonCreated = [];//数据结构，包含polygon和markers
 var polygonSpot = 0;
 var polygonLast = 0;
-
-//防止重复添加单击事件监听处理器，修复原始addEventListener的bug
-BMap.Map.prototype.on =
-    BMap.Map.prototype.addEventListener = function (type, handler, key) {
-        if (typeof handler != "function") {
-            return;
-        }
-        !handler.al && (handler.al = {});
-        !this.Hi && (this.Hi = {});
-
-        var e, t = this.Hi;
-        if (typeof key == "string" && key) {
-            /[^\w\-]/.test(key) && console.log("nonstandard key:" + key);
-            e = handler.Dx = key
-        }
-        type.indexOf("on") && (type = "on" + type);
-
-        // typeof t[type] != "object" && (t[type] = []);
-        typeof t[type] != "object" && (t[type] = {});
-        typeof handler.al[type] != "object" && (handler.al[type] = {});
-
-        // 避免函数重复注册
-        for (e in t[type]) {
-            if (t[type].hasOwnProperty(e) && t[type][e] === handler) return handler;
-        }
-        e = e || guid('$BAIDU$');
-        t[type][e] = handler;
-        handler.al[type].Dx = e;
-        key && typeof key == "string" && (t[type][key] = handler);
-
-        return handler;
-    };
-function guid(index){
-    return "TANGRAM__" + (window[index]._counter++).toString(36);
-}
+//NAMESPACE
+var Azdrawer = {};
+Azdrawer.map = window.map;
 
 //添加点
 function addMarker(longitude, lattitude) {
@@ -52,7 +18,7 @@ function addMarker(longitude, lattitude) {
     drawingAreaPoints.push(point);
     var marker = new BMap.Marker(point);
     pointMarkersCreated.push(marker);
-    map.addOverlay(marker);
+    Azdrawer.map.addOverlay(marker);
 }
 //事件处理器
 function clickEventHandler(e) {
@@ -70,11 +36,11 @@ function checkEditing() {
     }
     return false;
 }
-
 //开启绘制，退出绘制
 function selectable(selectable){
+    var isloaded = window.loaded;
     if(selectable){
-        if(!loaded){
+        if(!isloaded){
             alert("地图还没加载");
             return;
         }
@@ -92,14 +58,14 @@ function selectable(selectable){
 function onDrawPolygon(points) {
     var polygon = new BMap.Polygon(points, {strokeColor: "black", strokeWeight: 2, strokeOpacity: 0.5});
     polygonCreated.push({"polygon": polygon, "markers": pointMarkersCreated, "editing": false});
-    map.addOverlay(polygon);
+    Azdrawer.map.addOverlay(polygon);
 }
 
 function deletePointMarker(polygonInfo){
     var markers = polygonInfo['markers'];
     for (var markindex in markers) {
         if(markers.hasOwnProperty(markindex)){
-            map.removeOverlay(markers[markindex]);
+            Azdrawer.map.removeOverlay(markers[markindex]);
         }
     }
 }
@@ -168,7 +134,7 @@ function quitBrowse() {
 function deletePoint() {
     drawingAreaPoints = [];
     for (var point_index in pointMarkersCreated) {
-        map.removeOverlay(pointMarkersCreated[point_index]);
+        Azdrawer.map.removeOverlay(pointMarkersCreated[point_index]);
     }
 }
 
@@ -180,13 +146,13 @@ function deleteLastArea(all) {
     if (!all) {
         var polygonInfo = polygonCreated[polygonCreated.length - 1];
         deletePointMarker(polygonInfo);
-        map.removeOverlay(polygonInfo['polygon']);
+        Azdrawer.map.removeOverlay(polygonInfo['polygon']);
         polygonCreated.splice(-1, 1);
     } else {
         for (var index = 0; index < polygonCreated.length; index++) {
             polygonInfo = polygonCreated[index];
             deletePointMarker(polygonInfo);
-            map.removeOverlay(polygonInfo['polygon']);
+            Azdrawer.map.removeOverlay(polygonInfo['polygon']);
         }
     }
     freshCount();
@@ -196,7 +162,7 @@ function deleteLastArea(all) {
 function draw() {
     if (drawingAreaPoints.length >= 3) {
         onDrawPolygon(drawingAreaPoints);
-        quitBrowse();
+        quitBrowse();//会导致多次注册
         drawingAreaPoints = [];
         pointMarkersCreated = [];
         freshCount();
@@ -225,13 +191,13 @@ function moveble_point(enable) {
 }
 
 function addClkEvent(){
-    map.addEventListener("click", clickEventHandler);
+    Azdrawer.map.addEventListener("click", clickEventHandler);
     //console.log("EventHandler:", clickEventHandler.al['onclick']);
     //console.log("BaiduMap mapOnclickListener", map.Hi['onclick']);
 }
 
 function removeClkEvent(){
-    map.removeEventListener("click", clickEventHandler);
+    Azdrawer.map.removeEventListener("click", clickEventHandler);
     //console.log("EventHandler:", clickEventHandler.al['onclick']);
     //console.log("BaiduMap mapOnclickListener", map.Hi['onclick']);
 }
@@ -243,7 +209,6 @@ function move_finished() {
         var polygon = polygonInfo['polygon'];
         polygon.disableEditing();
     }
-    addClkEvent();
 }
 
 //区域涂色
@@ -251,10 +216,10 @@ function repaintColor(polygonIndex, color, opacity){
     if (0 <= polygonIndex && polygonIndex < polygonCreated.length) {
         var polygonInfo = polygonCreated[polygonIndex];
         var polygon = polygonInfo['polygon'];
-        map.removeOverlay(polygon);
+        Azdrawer.map.removeOverlay(polygon);
         polygon.setFillColor(color);
         polygon.setFillOpacity(opacity);
-        map.addOverlay(polygon);
+        Azdrawer.map.addOverlay(polygon);
     }
 }
 //亮起已绘制区域
