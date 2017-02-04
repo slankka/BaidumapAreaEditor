@@ -13,8 +13,8 @@ var Azdrawer = {};
 Azdrawer.map = window.map;
 
 //添加点
-function addMarker(longitude, lattitude) {
-    var point = new BMap.Point(longitude, lattitude);
+function addMarker(longitude, latitude) {
+    var point = new BMap.Point(longitude, latitude);
     drawingAreaPoints.push(point);
     var marker = new BMap.Marker(point);
     pointMarkersCreated.push(marker);
